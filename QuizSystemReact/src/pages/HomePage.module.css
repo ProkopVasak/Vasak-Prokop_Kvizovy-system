@@ -1,0 +1,128 @@
+.homePage {
+    max-width: 1200px; /* Nastavení maximální šířky stránky */
+    width: 90%;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.title {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 28px;
+    color: #333;
+}
+
+.quizGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Pevný počet sloupců pro desktop */
+    gap: 20px;
+    justify-content: center;
+}
+
+/* Na větších tabletech: 3 sloupce */
+@media (max-width: 1024px) {
+    .quizGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Na menších tabletech: 2 sloupce */
+@media (max-width: 768px) {
+    .quizGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Na mobilech: 1 sloupec */
+@media (max-width: 480px) {
+    .quizGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.quizCard {
+    display: flex;
+    flex-direction: column; /* Nastaví obsah karty ve sloupcích */
+    justify-content: space-between; /* Tlačítko na spodek */
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    width: 250px;
+}
+
+.quizCard h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: #333;
+    word-wrap: break-word; 
+}
+
+.quizCard p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+    word-wrap: break-word; 
+    flex-grow: 1;
+}
+
+.quizCard button {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100px;
+    align-self: center;
+}
+
+.quizCard button:hover {
+    background-color: #0056b3;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    padding: 8px 16px;
+    margin: 0 5px;
+    font-size: 14px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination span {
+    font-size: 16px;
+    color: #333;
+    margin: 0 10px;
+}
+
+.searchInput {
+    display: block;
+    margin: 0 auto 20px;
+    padding: 10px;
+    width: 100%;
+    max-width: 400px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    color: black;
+}

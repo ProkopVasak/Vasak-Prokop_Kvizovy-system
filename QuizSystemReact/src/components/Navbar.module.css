@@ -1,0 +1,82 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    background-color: #ededed;
+    color: black;
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+
+}
+
+.line {
+    width: 25px;
+    height: 3px;
+    background-color: black;
+    margin: 3px 0;
+}
+
+.menu {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+
+.menuItem, .menuButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: black;
+}
+
+.menuItem {
+    align-content: center;
+}
+
+.menuButton:hover {
+    text-decoration: underline;
+}
+
+.menuOpen {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background-color: #ededed;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .menu {
+        display: none;
+        flex-direction: column;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .menuOpen {
+        display: flex;
+    }
+}
