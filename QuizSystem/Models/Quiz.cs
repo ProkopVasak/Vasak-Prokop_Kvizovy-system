@@ -11,7 +11,7 @@ namespace QuizSystem.Models
 
         // Název kvízu
         [Required]
-        [StringLength(20)]
+        [StringLength(100)]
         public string Name { get; set; }
 
         // Popis kvízu

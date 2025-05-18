@@ -11,15 +11,15 @@ interface User {
 const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem('accessToken');
 
   // Funkce pro načtení uživatelů
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users`, {
+          credentials: 'include', 
           headers: {
-            'Authorization': `Bearer ${token}`,
+            
           },
         });
 
@@ -42,7 +42,7 @@ const AdminUsersPage: React.FC = () => {
     };
 
     fetchUsers();
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     document.title = "Admin Users"; 
@@ -51,11 +51,11 @@ const AdminUsersPage: React.FC = () => {
   // Funkce pro změnu role uživatele
   const changeRole = async (userId: string, newRole: string) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/change-role`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/Update`, {
+        credentials: 'include', 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ userId, newRole }),
       });
@@ -76,23 +76,23 @@ const AdminUsersPage: React.FC = () => {
 
   // Funkce pro mazání uživatele
   const deleteUser = async (userId: string) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/delete-user/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/${userId}`, {
+      credentials: 'include', 
+      method: 'DELETE',
+      headers: {},
+    });
 
-      if (response.ok) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-      } else {
-        console.error('Chyba při mazání uživatele');
-      }
-    } catch (error) {
-      console.error('Chyba:', error);
+    if (response.ok) {
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+    } else {
+      console.error('Chyba při mazání uživatele');
     }
-  };
+  } catch (error) {
+    console.error('Chyba:', error);
+  }
+};
+
 
   if (loading) {
     return <p>Načítání...</p>;

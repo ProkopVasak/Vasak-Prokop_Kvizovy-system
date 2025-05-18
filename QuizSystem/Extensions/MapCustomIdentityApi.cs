@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication.BearerToken;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +16,9 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace Microsoft.AspNetCore.Routing;
 
@@ -104,22 +108,22 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 
 
 
-        routeGroup.MapPost("/login", async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>>
-            ([FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
+        routeGroup.MapPost("/login", async Task<Results<EmptyHttpResult, ProblemHttpResult>>
+            ([FromBody] LoginRequest login, [FromServices] IServiceProvider sp) =>
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
 
-            var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
-            var isPersistent = (useCookies == true) && (useSessionCookies != true);
-            signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+            // Použijeme vždy cookie schéma – není třeba zjišťovat pomocí query parametrů.
+            signInManager.AuthenticationScheme = IdentityConstants.ApplicationScheme;
 
-            var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
+            // Můžete si dle potřeby nastavit, zda má být relace persistent (true/false)
+            var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent: false, lockoutOnFailure: true);
 
             if (result.RequiresTwoFactor)
             {
                 if (!string.IsNullOrEmpty(login.TwoFactorCode))
                 {
-                    result = await signInManager.TwoFactorAuthenticatorSignInAsync(login.TwoFactorCode, isPersistent, rememberClient: isPersistent);
+                    result = await signInManager.TwoFactorAuthenticatorSignInAsync(login.TwoFactorCode, isPersistent: false, rememberClient: false);
                 }
                 else if (!string.IsNullOrEmpty(login.TwoFactorRecoveryCode))
                 {
@@ -132,9 +136,10 @@ public static class IdentityApiEndpointRouteBuilderExtensions
                 return TypedResults.Problem(result.ToString(), statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            // The signInManager already produced the needed response in the form of a cookie or bearer token.
+            // Cookie middleware již nastaví HttpOnly cookie, takže stačí vrátit prázdnou odpověď.
             return TypedResults.Empty;
         });
+
 
         routeGroup.MapPost("/logout", async (SignInManager<IdentityUser> signInManager, [FromBody] object empty) =>
         {
@@ -358,7 +363,33 @@ public static class IdentityApiEndpointRouteBuilderExtensions
             });
         });
 
-        accountGroup.MapGet("/info", async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>>
+        accountGroup.MapGet("/info", async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>> (
+    ClaimsPrincipal claimsPrincipal,
+    [FromServices] IServiceProvider sp,
+    ILogger<InfoResponse> logger) =>
+        {
+            // Logujeme začátek zpracování – třeba identitu aktuálně volajícího uživatele
+            logger.LogInformation("Fetching user info for: {UserName}",
+                claimsPrincipal.Identity?.Name ?? "unknown");
+
+            var userManager = sp.GetRequiredService<UserManager<TUser>>();
+            var user = await userManager.GetUserAsync(claimsPrincipal);
+
+            if (user is null)
+            {
+                logger.LogWarning("User not found for given ClaimsPrincipal.");
+                return TypedResults.NotFound();
+            }
+
+            var infoResponse = await CreateInfoResponseAsync(user, userManager);
+            logger.LogInformation("Successfully fetched info for user: {Email}", infoResponse.Email);
+
+            return TypedResults.Ok(infoResponse);
+        });
+
+
+
+        accountGroup.MapGet("/roles", async Task<Results<Ok<List<string>>, NotFound>>
             (ClaimsPrincipal claimsPrincipal, [FromServices] IServiceProvider sp) =>
         {
             var userManager = sp.GetRequiredService<UserManager<TUser>>();
@@ -367,8 +398,12 @@ public static class IdentityApiEndpointRouteBuilderExtensions
                 return TypedResults.NotFound();
             }
 
-            return TypedResults.Ok(await CreateInfoResponseAsync(user, userManager));
+            var roles = await userManager.GetRolesAsync(user);
+            return TypedResults.Ok(roles.ToList());
         });
+
+
+
 
         accountGroup.MapPost("/info", async Task<Results<Ok<InfoResponse>, ValidationProblem, NotFound>>
             (ClaimsPrincipal claimsPrincipal, [FromBody] InfoRequest infoRequest, HttpContext context, [FromServices] IServiceProvider sp) =>
@@ -514,6 +549,6 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         public string? Name => null;
     }
 
-    
+
 
 }

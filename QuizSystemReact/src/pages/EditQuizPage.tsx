@@ -16,23 +16,30 @@ const EditQuizPage = () => {
 
     // Načítání quizu z API při inicializaci komponenty
     useEffect(() => {
-        const fetchQuiz = async () => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz/${id}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch quiz');
-                }
-                const data = await response.json();
-                setQuiz(data);
-            } catch (error) {
-                console.error('Error fetching quiz:', error);
-            } finally {
-                setLoading(false); // Nastavení loading stavu na false po načtení
-            }
-        };
+    
 
-        fetchQuiz();
-    }, [id]); // Znovu načíst quiz pokud se změní id
+    setLoading(true);
+    fetch(`${import.meta.env.VITE_API_URL}/api/quizzes/${id}/edit`, {
+        credentials: 'include', 
+      headers: { },
+    })
+      .then((res) => {
+        if (res.status === 403) {
+          // není vlastník
+          navigate("/");
+        }
+        if (res.status === 404) {
+          navigate("/");
+        }
+        if (!res.ok) {
+          throw new Error("Failed to fetch quiz");
+        }
+        return res.json() as Promise<Quiz>;
+      })
+      .then((data) => setQuiz(data))
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, [id, navigate]);
 
     // Funkce pro změnu názvu quizu
     const handleQuizNameChange = (value: string) => {
@@ -60,14 +67,6 @@ const EditQuizPage = () => {
         setQuiz((prevQuiz) => prevQuiz ? { ...prevQuiz, questions: updatedQuestions } : null);
     };
 
-    // Funkce pro změnu správnosti odpovědi
-    const handleAnswerCorrectChange = (questionIndex: number, answerIndex: number, isCorrect: boolean) => {
-        if (!quiz) return; // Pokud není quiz načtený, neprovádět změny
-        const updatedQuestions = [...quiz.questions];
-        updatedQuestions[questionIndex].answers[answerIndex].isCorrect = isCorrect;
-        setQuiz((prevQuiz) => prevQuiz ? { ...prevQuiz, questions: updatedQuestions } : null);
-    };
-
     // Funkce pro přidání nové otázky do quizu
     const handleAddQuestion = async () => {
         try {
@@ -78,11 +77,11 @@ const EditQuizPage = () => {
             }
 
             // Odeslání požadavku na API pro generování nové otázky
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz/generate-question/${quizId}`, {
-                method: "POST",
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quizzes/${quizId}/questions/template`, {
+                credentials: 'include', 
+                method: "GET",
                 headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Odeslání tokenu pro autentifikaci
+                    "Content-Type": "application/json"
                 },
             });
 
@@ -133,19 +132,13 @@ const EditQuizPage = () => {
             })),
         };
 
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-            // Pokud není token, přesměrovat na přihlašovací stránku
-            navigate('/login');
-            return;
-        }
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quizzes/${id}`, {
+                credentials: 'include', 
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(quizDto), // Odeslání dat ve formátu JSON
             });
@@ -163,11 +156,10 @@ const EditQuizPage = () => {
     // Funkce pro smazání kvízu
     const handleDelete = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quizzes/${id}`, {
+                credentials: 'include', 
                 method: 'DELETE',
                 headers: {
-                    Authorization: `Bearer ${token}`,
                 },
             });
 
@@ -180,6 +172,28 @@ const EditQuizPage = () => {
             console.error('Error deleting quiz:', error); // Chyba při mazání kvízu
         }
     };
+
+    const handleAnswerCorrectChange = (
+        questionIndex: number,
+        answerIndex: number
+            ) => {
+            setQuiz(prev => {
+                if (!prev) return prev;
+                return {
+                ...prev,
+                questions: prev.questions.map((q, qi) => {
+                    if (qi !== questionIndex) return q;
+                    return {
+                    ...q,
+                    answers: q.answers.map((a, ai) => ({
+                        ...a,
+                        isCorrect: ai === answerIndex, // právě tento ai je true
+                    })),
+                    };
+                }),
+                };
+            });
+            };
 
     // Pokud se kvíz stále načítá, zobrazit zprávu o načítání
     if (loading) return <div>Loading...</div>;
@@ -228,24 +242,36 @@ const EditQuizPage = () => {
                             {question.answers.map((answer, answerIndex) => (
                                 <div key={answerIndex} className={styles.answerContainer}>
                                     <input
-                                        className={styles.answerInput}
-                                        type="text"
-                                        value={answer.text}
-                                        onChange={(e) => handleAnswerTextChange(questionIndex, answerIndex, e.target.value)}
-                                        maxLength={20}
-                                        required
+                                    className={styles.answerInput}
+                                    type="text"
+                                    value={answer.text}
+                                    onChange={e =>
+                                        handleAnswerTextChange(
+                                        questionIndex,
+                                        answerIndex,
+                                        e.target.value
+                                        )
+                                    }
+                                    maxLength={20}
+                                    required
                                     />
                                     <label className={styles.checkboxLabel}>
-                                        Correct
-                                        <input
-                                            className={styles.checkbox}
-                                            type="checkbox"
-                                            checked={answer.isCorrect}
-                                            onChange={(e) => handleAnswerCorrectChange(questionIndex, answerIndex, e.target.checked)}
-                                        />
+                                    Correct
+                                    <input
+                                        className={styles.checkbox}
+                                        type="checkbox"
+                                        checked={answer.isCorrect}
+                                        onChange={() =>
+                                        handleAnswerCorrectChange(
+                                            questionIndex,
+                                            answerIndex
+                                        )
+                                        }
+                                    />
                                     </label>
                                 </div>
-                            ))}
+                                ))}
+
                         </div>
                         <button
                             type="button"

@@ -22,6 +22,10 @@
     margin-bottom: 20px;
     font-size: 16px;
     color: #555;
+
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .questionContainer {
@@ -37,6 +41,10 @@
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 15px;
+
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .answerList {
@@ -47,6 +55,9 @@
 
 .answerItem {
     margin-bottom: 10px;
+
+    max-width: 100%;
+    overflow-wrap: break-word;
 }
 
 .answerButton {
@@ -59,6 +70,11 @@
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease;
+
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    text-align: left;
 }
 
 .answerButton:hover {

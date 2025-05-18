@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'; // Hook pro navigaci na různé 
 import styles from './UserPage.module.css'; // Stylování komponenty
 
 const UserPage = () => {
-    const { quizzes, fetchUserQuizzes } = useContext(QuizContext); // Získání kvízů a funkce pro jejich načtení z kontextu
+    const { userQuizzes, fetchUserQuizzes } = useContext(QuizContext); // Získání kvízů a funkce pro jejich načtení z kontextu
     const navigate = useNavigate(); // Navigace mezi stránkami
 
     // Načítání kvízů při mountu komponenty
@@ -29,8 +29,8 @@ const UserPage = () => {
                 Create New Quiz
             </button>
             <div className={styles.quizzesContainer}>
-                {quizzes.length > 0 ? ( // Pokud uživatel má kvízy
-                    quizzes.map((quiz) => ( // Pro každý kvíz zobrazíme kartu
+                {userQuizzes.length > 0 ? ( // Pokud uživatel má kvízy
+                    userQuizzes.map((quiz) => ( // Pro každý kvíz zobrazíme kartu
                         <div key={quiz.id} className={styles.quizCard}>
                             <h3>{quiz.name}</h3> {/* Název kvízu */}
                             <p>{quiz.description}</p> {/* Popis kvízu */}

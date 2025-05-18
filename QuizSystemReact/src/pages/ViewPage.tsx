@@ -31,7 +31,7 @@ const ViewQuizPage = () => {
     useEffect(() => {
         const fetchQuiz = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz/${id}`); // Načítání dat kvízu
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quizzes/${id}`); // Načítání dat kvízu
                 if (!response.ok) {
                     throw new Error("Failed to fetch quiz"); // Chyba při načítání
                 }

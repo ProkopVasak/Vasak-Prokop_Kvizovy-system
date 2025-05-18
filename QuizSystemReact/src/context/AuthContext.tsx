@@ -1,16 +1,14 @@
 import React, { createContext, ReactNode, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Definice typu pro AuthContext, který poskytuje metody a stav pro práci s autentizací
 interface AuthContextType {
-    user: { name: string } | null;  // Informace o přihlášeném uživateli (pokud je přihlášen)
-    login: (email: string, password: string) => Promise<void>;  // Funkce pro přihlášení
-    register: (email: string, password: string) => Promise<void>;  // Funkce pro registraci
-    logout: () => Promise<void>;  // Funkce pro odhlášení
-    fetchUserInfo: () => Promise<void>;  // Funkce pro získání informací o uživateli
+    user: { name: string } | null;  
+    login: (email: string, password: string) => Promise<void>; 
+    register: (email: string, password: string) => Promise<void>;  
+    logout: () => Promise<void>;  
+    fetchUserInfo: () => Promise<void>; 
 }
 
-// Počáteční stav pro AuthContext, kdy je uživatel null a funkce jsou prázdné
 const initialAuthContext: AuthContextType = {
     user: null,
     login: async () => {},
@@ -19,62 +17,57 @@ const initialAuthContext: AuthContextType = {
     fetchUserInfo: async () => {},
 };
 
-// Vytvoření kontextu pro autentizaci
 export const AuthContext = createContext(initialAuthContext);
 
-// Provider, který poskytuje kontext pro komponenty v aplikaci
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<{ name: string } | null>(null);  // Stav pro uživatele
-    const navigate = useNavigate();  // Hook pro navigaci po přihlášení/odhlášení
+    const [user, setUser] = useState<{ name: string } | null>(null); 
+    const navigate = useNavigate();  
 
-    // Funkce pro přihlášení uživatele
     const login = async (email: string, password: string) => {
-        try {
-            // Poslání požadavku na přihlášení
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),  // Odeslání emailu a hesla
-            });
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+      credentials: 'include', // cookie budou odesílány a přijímány
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-            // Zkontrolování odpovědi a uložení tokenu do localStorage
-            if (!response.ok) {
-                throw new Error('Failed to login');
-            }
-            const data = await response.json();
-            localStorage.setItem('accessToken', data.accessToken);
+    if (!response.ok) {
+      throw new Error('Failed to login');
+    }
 
-            // Načtení informací o uživateli a přesměrování na hlavní stránku
-            await fetchUserInfo();
-            navigate('/');
-        } catch (error) {
-            console.error("Login error:", error);  // Zachycení a výpis chyby
-        }
-    };
+    await fetchUserInfo();
+    navigate('/');
+  } catch (error) {
+    console.error("Login error:", error);
+  }
+};
 
-    // Funkce pro získání informací o uživateli na základě uloženého tokenu
-    const fetchUserInfo = async () => {
-        const token = localStorage.getItem('accessToken');
+const fetchUserInfo = async () => {
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/manage/info`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,  // Poslání tokenu pro autentizaci
-                },
-            });
+    method: "GET",
+    credentials: "include", // posíláme cookies spolu s požadavkem
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
             if (response.ok) {
                 const userData = await response.json();
-                setUser({ name: userData.email });  // Nastavení informací o uživateli
+                setUser({ name: userData.email });
+                console.log("Přihlášený uživatel:", userData);
             } else {
+                setUser(null);
                 console.error("Failed to fetch user info");
             }
         } catch (error) {
-            console.error("Error fetching user info:", error);  // Zachycení a výpis chyby
+            setUser(null);
+            console.error("Error fetching user info:", error);
         }
     };
-
     // Funkce pro registraci nového uživatele
     const register = async (email: string, password: string) => {
         try {
@@ -100,12 +93,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Funkce pro odhlášení uživatele
     const logout = async () => {
-        const token = localStorage.getItem('accessToken');
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/logout`, {
+                credentials: 'include',  
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,  // Poslání tokenu pro autentizaci
+                headers: {  // Poslání tokenu pro autentizaci
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify("logout"),  // Tělo požadavku pro odhlášení
@@ -115,8 +107,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 throw new Error('Failed to logout');
             }
 
-            // Odstranění tokenu a nastavení stavu uživatele na null (odhlášení)
-            localStorage.removeItem('accessToken');
             setUser(null);
             navigate('/login');  // Přesměrování na stránku přihlášení
         } catch (error) {
@@ -126,10 +116,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Načtení informací o uživateli při startu aplikace, pokud je uložený token
     useEffect(() => {
-        if (localStorage.getItem('accessToken')) {
-            fetchUserInfo();
-        }
+        fetchUserInfo();
     }, []);
+
 
     // Poskytnutí AuthContext pro všechny komponenty uvnitř AuthProvider
     return (

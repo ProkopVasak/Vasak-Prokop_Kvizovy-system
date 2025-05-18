@@ -14,39 +14,20 @@ import ViewPage from './pages/ViewPage'; // Stránka pro zobrazení kvízu v re�
 
 function App() {
   return (
-    // Router obaluje celou aplikaci, aby bylo možné navigovat mezi stránkami
     <Router>
-      {/* Context providery obalují komponenty, které mají přístup k autentizaci a quizům */}
       <AuthProvider>
         <QuizProvider>
-          {/* Navigační panel, který bude zobrazen na všech stránkách */}
           <Navbar />
           
-          {/* Definice tras pro různé stránky */}
           <Routes>
-            {/* Admin sekce, všechny trasy začínající '/admin' budou obsluhovány AdminLayout */}
             <Route path="/admin/*" element={<AdminLayout />} />
-            
-            {/* Úvodní stránka */}
             <Route path="/" element={<HomePage />} />
-            
-            {/* Stránky pro autentizaci */}
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
-            
-            {/* Stránka pro zobrazení konkrétního kvízu */}
             <Route path="/quiz/:id" element={<QuizPage />} />
-            
-            {/* Stránka pro vytvoření nového kvízu */}
             <Route path="/create" element={<Create />} />
-            
-            {/* Stránka pro zobrazení všech kvízů uživatele */}
             <Route path="/user" element={<UserPage />} />
-            
-            {/* Stránka pro úpravu existujícího kvízu */}
             <Route path="/edit/:id" element={<EditQuizPage />} />
-            
-            {/* Stránka pro zobrazení kvízu v režimu pouze pro čtení */}
             <Route path="/view/:id" element={<ViewPage />} />
           </Routes>
         </QuizProvider>

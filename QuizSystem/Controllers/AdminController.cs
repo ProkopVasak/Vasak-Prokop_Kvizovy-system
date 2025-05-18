@@ -13,7 +13,7 @@ namespace QuizSystem.Controllers
     [Authorize(Policy = "AdminPolicy")]
     [Route("api/[controller]")]
     [ApiController]
-    
+
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
@@ -53,8 +53,8 @@ namespace QuizSystem.Controllers
 
         // Změní roli uživatele
 
-        [HttpPost("change-role")]
-        public async Task<IActionResult> ChangeUserRole([FromBody] ChangeRoleRequest request)
+        [HttpPost("Update")]
+        public async Task<IActionResult> Update([FromBody] ChangeRoleRequest request)
         {
             var user = await _userManager.FindByIdAsync(request.UserId);
             if (user == null)
@@ -104,24 +104,31 @@ namespace QuizSystem.Controllers
 
         // Smaže uživatele podle ID
 
-        [HttpDelete("delete-user/{userId}")]
+        [HttpDelete("{userId}")]
         public async Task<IActionResult> DeleteUser(string userId)
         {
+            // Získáme uživatele podle Id
             var user = await _userManager.FindByIdAsync(userId);
-
             if (user == null)
             {
+                // Vrátíme 404 Not Found, pokud uživatel nebyl nalezen
                 return NotFound(new { message = "Uživatel nebyl nalezen." });
             }
 
+            // Pokusíme se uživatele smazat
             var result = await _userManager.DeleteAsync(user);
-
             if (!result.Succeeded)
             {
-                return BadRequest(new { message = "Chyba při mazání uživatele.", errors = result.Errors });
+                // Pokud operace selže, vrátíme 500 Internal Server Error s detaily
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = "Chyba při mazání uživatele.",
+                    errors = result.Errors
+                });
             }
 
-            return Ok(new { message = "Uživatel byl úspěšně smazán." });
+            // Při úspěšném smazání vrátíme 204 No Content
+            return NoContent();
         }
     }
 }

@@ -2,6 +2,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useLocation } from 'react-router-dom';
+
 import styles from './AuthPage.module.css';
 
 const AuthPage = () => {

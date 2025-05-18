@@ -79,3 +79,12 @@
 .backButton:hover {
     background-color: #0056b3;
 }
+
+.description,
+.questionTitle,
+.answer {
+  /* umožní zalomení běžných mezer a dlouhých řetězců */
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}

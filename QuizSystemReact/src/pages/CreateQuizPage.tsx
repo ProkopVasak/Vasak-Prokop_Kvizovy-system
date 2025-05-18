@@ -41,21 +41,24 @@ const CreateQuizPage = () => {
         setQuestions(updatedQuestions);
     };
 
-    // Funkce pro změnu správnosti odpovědi (zaškrtnutí odpovědi jako správné)
     const handleAnswerCorrectChange = (
         questionIndex: number,
-        answerIndex: number,
-        isCorrect: boolean
-    ) => {
-        const updatedQuestions = [...questions];
-        updatedQuestions[questionIndex].answers = updatedQuestions[questionIndex].answers.map(
-            (answer, idx) => ({
-                ...answer,
-                isCorrect: idx === answerIndex ? isCorrect : false,  // Nastavení, že pouze 1 odpověď může být správná
+        answerIndex: number
+            ) => {
+                setQuestions(prev =>
+                    prev.map((q, qi) => {
+                        if (qi !== questionIndex) return q;
+                            return {
+                                ...q,
+                                answers: q.answers.map((a, ai) => ({
+                                ...a,
+                                isCorrect: ai === answerIndex,  // jedině toto je true
+                })),
+            };
             })
         );
-        setQuestions(updatedQuestions);
     };
+
 
     // Funkce pro odeslání formuláře pro vytvoření kvízu
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -74,15 +77,14 @@ const CreateQuizPage = () => {
             })),
         };
 
-        const token = localStorage.getItem('accessToken');  // Získání tokenu z localStorage
 
         try {
             // Odeslání POST požadavku pro vytvoření kvízu
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quizzes`, {
+                credentials: 'include',  
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(quizDto),
             });
@@ -96,6 +98,7 @@ const CreateQuizPage = () => {
             console.error('Error creating quiz:', error);
         }
     };
+
 
     // Nastavení titulku stránky
     useEffect(() => {
@@ -114,7 +117,7 @@ const CreateQuizPage = () => {
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}  // Aktualizace názvu
-                        maxLength={20}  // Max délka názvu kvízu
+                        maxLength={100}  // Max délka názvu kvízu
                         required
                     />
                 </div>
@@ -150,40 +153,37 @@ const CreateQuizPage = () => {
                             <div>
                                 <h4>Answers</h4>
                                 {question.answers.map((answer, answerIndex) => (
-                                    <div
-                                        key={answerIndex}
-                                        className={styles.answerContainer}
-                                    >
+                                    <div key={answerIndex} className={styles.answerContainer}>
                                         <input
-                                            className={styles.answerInput}
-                                            type="text"
-                                            value={answer.text}
-                                            onChange={(e) =>
-                                                handleAnswerTextChange(
-                                                    questionIndex,
-                                                    answerIndex,
-                                                    e.target.value  // Změna textu odpovědi
-                                                )
-                                            }
-                                            required
+                                        className={styles.answerInput}
+                                        type="text"
+                                        value={answer.text}
+                                        onChange={e =>
+                                            handleAnswerTextChange(
+                                            questionIndex,
+                                            answerIndex,
+                                            e.target.value
+                                            )
+                                        }
+                                        required
                                         />
                                         <label className={styles.checkboxLabel}>
-                                            Correct
-                                            <input
-                                                className={styles.checkbox}
-                                                type="checkbox"
-                                                checked={answer.isCorrect}
-                                                onChange={(e) =>
-                                                    handleAnswerCorrectChange(
-                                                        questionIndex,
-                                                        answerIndex,
-                                                        e.target.checked  // Zaškrtnutí správné odpovědi
-                                                    )
-                                                }
-                                            />
+                                        Correct
+                                        <input
+                                            className={styles.checkbox}
+                                            type="checkbox"
+                                            checked={answer.isCorrect}
+                                            onChange={() =>
+                                            handleAnswerCorrectChange(
+                                                questionIndex,
+                                                answerIndex
+                                            )
+                                            }
+                                        />
                                         </label>
                                     </div>
-                                ))}
+                                    ))}
+
                             </div>
                         </div>
                     ))}
