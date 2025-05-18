@@ -89,6 +89,10 @@ app.UseCors("MyCors");  // Aktivace CORS politiky
 app.UseAuthentication();  // Aktivace autentizace (na základì cookies)
 app.UseAuthorization();   // Aktivace autorizace (kontrola oprávnìní)
 
+app.UseFileServer();
+
+app.MapFallbackToFile("index.html");
+
 app.MapControllers();
 
 // Mapování vlastní skupiny API s pøizpùsobenou Identity API pro uživatele typu IdentityUser
